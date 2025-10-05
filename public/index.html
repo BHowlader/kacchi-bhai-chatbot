@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kacchi Bhai - AI Assistant</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #8B0000 0%, #CD5C5C 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 20px;
+            height: 90vh;
+        }
+
+        .config-panel {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow-y: auto;
+        }
+
+        .chatbot-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .panel-title {
+            font-size: 1.5em;
+            color: #2d3748;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #8B0000;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #4a5568;
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 0.95em;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #8B0000;
+        }
+
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        .api-status {
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .api-status.connected {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .api-status.disconnected {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            background: #8B0000;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.2s;
+        }
+
+        .btn:hover {
+            background: #A52A2A;
+            transform: translateY(-2px);
+        }
+
+        .chatbot-header {
+            background: linear-gradient(135deg, #8B0000 0%, #A52A2A 100%);
+            color: white;
+            padding: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header-info {
+            display: flex;
+            align-items: center;
+        }
+
+        .restaurant-icon {
+            font-size: 2.5em;
+            margin-right: 15px;
+        }
+
+        .header-info h2 {
+            font-size: 1.5em;
+            margin-bottom: 5px;
+        }
+
+        .header-info p {
+            opacity: 0.9;
+            font-size: 0.9em;
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            background: #48bb78;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 30px;
+            background: #FEF5E7;
+        }
+
+        .message {
+            margin-bottom: 20px;
+            display: flex;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 15px 20px;
+            border-radius: 18px;
+            position: relative;
+            white-space: pre-wrap;
+            line-height: 1.5;
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message.user .message-content {
+            background: linear-gradient(135deg, #8B0000 0%, #A52A2A 100%);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.bot .message-content {
+            background: white;
+            color: #2d3748;
+            border: 2px solid #8B0000;
+            border-bottom-left-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .message.system .message-content {
+            background: #fef3c7;
+            color: #78350f;
+            max-width: 100%;
+            font-size: 0.85em;
+            font-family: monospace;
+        }
+
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            background: white;
+            border: 2px solid #8B0000;
+            border-radius: 18px;
+            width: fit-content;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background: #8B0000;
+            border-radius: 50%;
+            margin: 0 3px;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+            0%, 60%, 100% {
+                transform: translateY(0);
+            }
+            30% {
+                transform: translateY(-10px);
+            }
+        }
+
+        .chat-input-area {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 15px 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 25px;
+            font-size: 1em;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .chat-input:focus {
+            border-color: #8B0000;
+        }
+
+        .send-btn {
+            padding: 15px 30px;
+            background: #8B0000;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.3s, transform 0.2s;
+        }
+
+        .send-btn:hover {
+            background: #A52A2A;
+            transform: scale(1.05);
+        }
+
+        .send-btn:disabled {
+            background: #cbd5e0;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .info-box {
+            background: #fff5f5;
+            border-left: 4px solid #8B0000;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+
+        .quick-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            padding: 15px 30px;
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .quick-btn {
+            padding: 8px 16px;
+            background: #fff5f5;
+            color: #8B0000;
+            border: 2px solid #8B0000;
+            border-radius: 20px;
+            font-size: 0.85em;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .quick-btn:hover {
+            background: #8B0000;
+            color: white;
+        }
+
+        @media (max-width: 968px) {
+            .container {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+
+            .config-panel {
+                order: 2;
+            }
+
+            .chatbot-container {
+                height: 600px;
+            }
+
+            .quick-actions {
+                overflow-x: auto;
+                flex-wrap: nowrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Configuration Panel -->
+        <div class="config-panel">
+            <h1 class="panel-title">🍛 Restaurant Settings</h1>
+            
+            <div class="info-box">
+                <strong>🎯 Restaurant Mode Active</strong><br>
+                AI can handle reservations, orders, and menu questions!
+            </div>
+
+            <div id="apiStatus" class="api-status disconnected">
+                ⚠️ Not Connected
+            </div>
+
+            <div class="form-group">
+                <label>Server URL</label>
+                <input type="text" id="serverUrl" value="http://localhost:3000">
+            </div>
+
+            <div class="form-group">
+                <label>OpenAI API Key</label>
+                <input type="password" id="apiKey" placeholder="sk-...">
+            </div>
+
+            <div class="form-group">
+                <label>Model</label>
+                <select id="modelSelect">
+                    <option value="gpt-4o-mini">GPT-4o Mini (Recommended)</option>
+                    <option value="gpt-4o">GPT-4o</option>
+                    <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Restaurant Name</label>
+                <input type="text" id="businessName" value="Kacchi Bhai">
+            </div>
+
+            <div class="form-group">
+                <label>System Instructions</label>
+                <textarea id="systemPrompt">You are a friendly AI assistant for Kacchi Bhai, a popular Bangladeshi restaurant chain famous for authentic Kacchi Biriyani. Your personality is warm, enthusiastic about food, and helpful. You can:
+- Take reservations
+- Answer menu questions  
+- Place takeout/delivery orders
+- Check availability
+- Provide dietary information
+
+Use food emojis occasionally 🍛🥘 Always confirm booking details clearly before finalizing. Be polite and professional. Greet customers with "Assalamu Alaikum".</textarea>
+            </div>
+
+            <div class="form-group">
+                <label>Restaurant Information</label>
+                <textarea id="knowledgeBase">🍛 KACCHI BHAI - Authentic Kacchi Biriyani
+
+📍 Locations:
+• Gulshan: House 45, Road 11, Gulshan-1
+• Dhanmondi: 27 Satmasjid Road
+• Banani: 45 Kemal Ataturk Avenue
+• Uttara: Sector 7, Road 12
+• Mirpur -1: Opposite to Sony Cinema hall
+
+
+📞 Phone: 09678-111-999
+✉️ Email: order@kacchibhai.com
+
+⏰ Business Hours:
+Daily: 11:00 AM - 11:00 PM
+(Kitchen closes at 10:30 PM)
+
+🍽️ MENU:
+
+🍛 KACCHI BIRIYANI:
+• Mutton Kacchi (Regular) - ৳380
+• Mutton Kacchi (Special) - ৳450
+• Beef Kacchi (Regular) - ৳350
+• Beef Kacchi (Special) - ৳420
+• Chicken Kacchi - ৳320
+
+🥘 SIDE DISHES:
+• Borhani (Traditional yogurt drink) - ৳40
+• Firni (Rice pudding) - ৳80
+• Raita - ৳50
+• Salad - ৳30
+
+🥤 BEVERAGES:
+• Soft Drinks - ৳30
+• Mineral Water - ৳20
+• Mango Lassi - ৳120
+• Sweet Lassi - ৳100
+
+💰 Price Range: ৳20 - ৳450
+
+🚚 Delivery Areas: 
+Gulshan, Banani, Dhanmondi, Mohakhali, Uttara, Mirpur, Bashundhara, Baridhara, Badda, Mohammadpur
+Delivery Fee: ৳50 | Time: 40-60 minutes
+
+Also available on: Food Panda, Pathao Food
+
+🎉 Group bookings available (call ahead for parties of 10+)
+💳 Payment: Cash, bKash, Nagad, Cards accepted
+
+Special: Our Kacchi is slow-cooked in traditional style with aromatic basmati rice and premium meat marinated for 8+ hours!</textarea>
+            </div>
+
+            <button class="btn" onclick="saveConfig()">💾 Save Configuration</button>
+            <button class="btn" style="margin-top: 10px; background: #dc2626;" onclick="clearChat()">🗑️ Clear Chat</button>
+        </div>
+
+        <!-- Chatbot Interface -->
+        <div class="chatbot-container">
+            <div class="chatbot-header">
+                <div class="header-info">
+                    <div class="restaurant-icon">🍛</div>
+                    <div>
+                        <h2><span class="status-indicator"></span><span id="businessNameDisplay">Kacchi Bhai</span></h2>
+                        <p>AI Assistant - Order, Reserve, Ask!</p>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="quick-actions">
+                <button class="quick-btn" onclick="quickMessage('Show me the menu')">📋 Menu</button>
+                <button class="quick-btn" onclick="quickMessage('I want to make a reservation')">📅 Reserve</button>
+                <button class="quick-btn" onclick="quickMessage('I want to order for delivery')">🚚 Order</button>
+                <button class="quick-btn" onclick="quickMessage('What are your branch locations?')">📍 Locations</button>
+                <button class="quick-btn" onclick="quickMessage('What are your business hours?')">🕐 Hours</button>
+            </div>
+
+            <div class="chat-messages" id="chatMessages">
+                <div class="message bot">
+                    <div class="message-content">🍛 Assalamu Alaikum! Welcome to Kacchi Bhai! 
+
+I'm your AI assistant and I'm here to help you with:
+
+🍽️ Browse our delicious Kacchi Biriyani menu
+📅 Make table reservations
+🚚 Order takeout or delivery
+💰 Check prices and ingredients
+📍 Find our branch locations
+❓ Answer any questions
+
+What can I help you with today?</div>
+                </div>
+            </div>
+
+            <div class="chat-input-area">
+                <input type="text" class="chat-input" id="userInput" placeholder="Ask me anything or use quick actions above..." onkeypress="handleKeyPress(event)">
+                <button class="send-btn" id="sendBtn" onclick="sendMessage()">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let conversationHistory = [];
+        let serverUrl = 'http://localhost:3000';
+
+        async function saveConfig() {
+            const apiKey = document.getElementById('apiKey').value;
+            serverUrl = document.getElementById('serverUrl').value;
+            
+            if (!apiKey) {
+                alert('Please enter your OpenAI API key!');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${serverUrl}/api/set-key`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ apiKey })
+                });
+
+                if (!response.ok) throw new Error('Failed to connect to server');
+
+                document.getElementById('apiStatus').className = 'api-status connected';
+                document.getElementById('apiStatus').textContent = '✅ Connected & Ready';
+                
+                const businessName = document.getElementById('businessName').value;
+                document.getElementById('businessNameDisplay').textContent = businessName;
+                
+                alert('✅ Configuration saved! Ready to take orders!');
+            } catch (error) {
+                document.getElementById('apiStatus').className = 'api-status disconnected';
+                document.getElementById('apiStatus').textContent = '❌ Cannot connect to server';
+                alert(`Error: ${error.message}\n\nMake sure your backend server is running!`);
+            }
+        }
+
+        function clearChat() {
+            conversationHistory = [];
+            document.getElementById('chatMessages').innerHTML = `
+                <div class="message bot">
+                    <div class="message-content">🍛 Chat cleared! How can I help you today?</div>
+                </div>
+            `;
+        }
+
+        function updateStats() {
+            // Stats tracking removed
+        }
+
+        function quickMessage(message) {
+            document.getElementById('userInput').value = message;
+            sendMessage();
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('userInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+
+            const sendBtn = document.getElementById('sendBtn');
+            sendBtn.disabled = true;
+            
+            addMessage('user', message);
+            input.value = '';
+            
+            conversationHistory.push({
+                role: 'user',
+                content: message
+            });
+
+            showTypingIndicator();
+
+            try {
+                const model = document.getElementById('modelSelect').value;
+                const systemPrompt = document.getElementById('systemPrompt').value;
+                const knowledgeBase = document.getElementById('knowledgeBase').value;
+
+                const response = await fetch(`${serverUrl}/api/chat`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        messages: conversationHistory,
+                        model: model,
+                        systemPrompt: systemPrompt,
+                        knowledgeBase: knowledgeBase
+                    })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Request failed');
+                }
+
+                const data = await response.json();
+                
+                removeTypingIndicator();
+
+                if (data.function_called) {
+                    addMessage('system', `🤖 Action: ${data.function_called}(...)`);
+                }
+
+                conversationHistory.push({
+                    role: 'assistant',
+                    content: data.message
+                });
+                
+                addMessage('bot', data.message);
+
+            } catch (error) {
+                removeTypingIndicator();
+                addMessage('system', `❌ Error: ${error.message}`);
+            }
+            
+            sendBtn.disabled = false;
+        }
+
+        function addMessage(type, content) {
+            const messagesContainer = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+            contentDiv.textContent = content;
+            
+            messageDiv.appendChild(contentDiv);
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function showTypingIndicator() {
+            const messagesContainer = document.getElementById('chatMessages');
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'message bot';
+            typingDiv.id = 'typingIndicator';
+            typingDiv.innerHTML = `
+                <div class="typing-indicator">
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                </div>
+            `;
+            messagesContainer.appendChild(typingDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function removeTypingIndicator() {
+            const indicator = document.getElementById('typingIndicator');
+            if (indicator) indicator.remove();
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        window.addEventListener('load', async () => {
+            const serverUrl = document.getElementById('serverUrl').value;
+            try {
+                const response = await fetch(`${serverUrl}/api/health`);
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.openai_configured) {
+                        document.getElementById('apiStatus').className = 'api-status connected';
+                        document.getElementById('apiStatus').textContent = '✅ Server Connected';
+                    } else {
+                        document.getElementById('apiStatus').className = 'api-status disconnected';
+                        document.getElementById('apiStatus').textContent = '⚠️ Server OK - Need API Key';
+                    }
+                }
+            } catch (error) {
+                console.log('Server not running yet');
+            }
+        });
+    </script>
+</body>
+</html>
