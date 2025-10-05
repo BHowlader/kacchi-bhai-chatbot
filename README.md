@@ -215,7 +215,7 @@ MIT License - see LICENSE file for details
 
 ## Authors
 
-- Your Name - Initial work
+- Bibek Howlader - Initial work
 
 ## Acknowledgments
 
@@ -227,7 +227,7 @@ MIT License - see LICENSE file for details
 
 For issues and questions:
 - Open an issue on GitHub
-- Email: your-email@example.com
+- Email: bibekhowlader8@gmail.com
 
 ## Roadmap
 
