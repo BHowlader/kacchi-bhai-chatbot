@@ -1,3 +1,4 @@
+<!--
 ## Screenshots
 
 ### Main Interface
@@ -11,6 +12,7 @@
 
 ### API Response
 ![API](screenshots/screenshot-4-api.png)
+------>
 # Kacchi Bhai AI Chatbot
 
 AI-powered customer service chatbot for Kacchi Bhai restaurant chain. Handles reservations, orders, menu inquiries, and delivery questions using OpenAI GPT models.
